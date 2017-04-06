@@ -176,7 +176,7 @@ def isspec(x: object):
 
 
 def assert_spec(s: Speccable, x: object) -> object:
-    return specize(s)(x)
+    return impl.assert_spec(specize(s),x)
 
 
 def coll_of(s: Speccable):

@@ -15,7 +15,9 @@ def test_dict_example_treats_values_as_equal_to_spec():
 
     wrong_value = UUID('a5bef1a0-d139-49d3-91ff-79a69aa39759')
     check_spec(s, {'k': wrong_value},
-               [Problem(path('k'), wrong_value, equal_to(expected_value),
+               [Problem(path('k'),
+                        wrong_value,
+                        equal_to(expected_value),
                         "expected 80b71e04-9862-462b-ac0c-0c34dc272c7b (UUID) but got a5bef1a0-d139-49d3-91ff-79a69aa39759 (UUID)")])
 
 
@@ -28,7 +30,9 @@ def test_dict_example_treats_dict_values_as_more_dict_examples():
 
     wrong_value = UUID('a5bef1a0-d139-49d3-91ff-79a69aa39759')
     check_spec(s, {'j': {'k': wrong_value}},
-               [Problem(path('j', 'k'), wrong_value, equal_to(expected_value),
+               [Problem(path('j', 'k'),
+                        wrong_value,
+                        equal_to(expected_value),
                         "expected 80b71e04-9862-462b-ac0c-0c34dc272c7b (UUID) but got a5bef1a0-d139-49d3-91ff-79a69aa39759 (UUID)")])
 
 

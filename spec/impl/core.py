@@ -49,6 +49,7 @@ class Problem(NamedTuple):
     spec: 'Spec'
     reason: str
 
+
 class Explanation:
     @classmethod
     def with_problems(cls, *problems: Iterable[Problem]) -> 'Explanation':
@@ -104,12 +105,6 @@ class Spec(metaclass=ABCMeta):
     @abstractmethod
     def describe(self) -> str:
         raise NotImplementedError()
-
-    def __call__(self, x):
-        conformed = self.conform(x)
-        if isvalid(conformed):
-            return conformed
-        raise SpecError(x, Explanation.with_problems(*self.explain(path(), x)))
 
     def __str__(self, *args, **kwargs):
         return self.describe()
@@ -181,3 +176,10 @@ class SimpleSpec(Spec):
 
 PredFn = Callable[[object], bool]
 Speccable = Union[Spec, PredFn, Set, Dict]
+
+
+def assert_spec(s: Spec, x: object):
+    conformed = s.conform(x)
+    if isvalid(conformed):
+        return conformed
+    raise SpecError(x, Explanation.with_problems(*s.explain(path(), x)))
