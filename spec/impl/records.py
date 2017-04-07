@@ -17,14 +17,15 @@ class UnboundTypeVar:
 
 def resolve_typevar(a: AnnotationContext) -> Union[AnnotationContext, UnboundTypeVar]:
     n = a.annotation.__name__
-    if n in a.typevars_from_class:
-        t = a.typevars_from_class[n]
+
+    if n not in a.typevars_from_class:
+        return UnboundTypeVar(a.annotation)
+
+    bound_to = a.typevars_from_class[n]
+    if isinstance(bound_to, TypeVar) and _typevar_key(bound_to) == _typevar_key(a.annotation):
+        return UnboundTypeVar(bound_to)
     else:
-        t = TypeVar(n)
-    if isinstance(t, TypeVar):
-        return UnboundTypeVar(t)
-    else:
-        return AnnotationContext(t, a.class_annotation_was_on, a.typevars_from_class)
+        return AnnotationContext(bound_to, a.class_annotation_was_on, a.typevars_from_class)
 
 
 class DeferredSpec(Spec):
