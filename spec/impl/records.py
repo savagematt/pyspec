@@ -29,16 +29,16 @@ def resolve_typevar(a: AnnotationContext) -> Union[AnnotationContext, UnboundTyp
 
 
 class DeferredSpec(Spec):
-    def __init__(self, factory: Callable, hint_resolver: Callable[[], type]):
+    def __init__(self, spec_factory: Callable[[type],Spec], hint_resolver: Callable[[], type]):
         super().__init__()
-        self._factory = factory
+        self._spec_factory = spec_factory
         self._hint_resolver = hint_resolver
         self._resolved_spec = None
 
     def _resolve_spec(self) -> Spec:
         if not self._resolved_spec:
             resolved_hint = self._hint_resolver()
-            self._resolved_spec = self._factory(resolved_hint)
+            self._resolved_spec = self._spec_factory(resolved_hint)
         return self._resolved_spec
 
     def describe(self) -> str:
