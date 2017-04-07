@@ -6,7 +6,6 @@ from spec.impl import specs as sis
 from spec.impl.core import Spec, Path, Problem, SpecResult, INVALID, isinvalid
 from spec.impl.dicts import DictSpec
 from spec.impl.util.forwardref import is_forward_ref, resolve_forward_ref
-from spec.impl.util.typevars import extract_typevars
 from spec.impl.util.annotations import AnnotationContext, extract_annotations
 
 
@@ -57,16 +56,36 @@ class UnboundTypeVarSpec(sis.Any):
         self.typevar = typevar
 
 
+def _typevar_key(t: TypeVar):
+    """
+    If I define a class like this:
+    
+    T=TypeVar('T')
+    class Foo:
+        a: T
+        b: T
+
+    ...then the two annotations on a and b are two different instances of TypeVar
+    
+    TypeVars are not hashable and don't implement __eq__, so it's not possible to use this mechanism to detect that
+    the two annotations are the same, so we need to create a key from each TypeVar.
+    """
+    return tuple(getattr(t,s) for s in t.__slots__)
+
+
 class UnboundTypeVarDictSpec(Spec):
     _NOT_FOUND = object()
 
     def __init__(self, unbound_typevar_keys, spec_generator):
         super().__init__()
+
         typevar_to_attr_names = {}
         for attr_name, typevar in unbound_typevar_keys.items():
-            if not typevar in typevar_to_attr_names:
-                typevar_to_attr_names[typevar] = []
-            typevar_to_attr_names[typevar].append(attr_name)
+            tvk =_typevar_key(typevar)
+            if not tvk in typevar_to_attr_names:
+                typevar_to_attr_names[tvk] = []
+            typevar_to_attr_names[tvk].append(attr_name)
+
         self._typevar_to_attr_names = typevar_to_attr_names
         self._spec_generator = spec_generator
 
@@ -116,13 +135,12 @@ def spec_from(x: Union[AnnotationContext, type]):
             for attr, annotation in annotations.items():
                 specs[attr] = spec_from(annotation)
 
-            typevars = extract_typevars(x)
-            unbound_typevars = {k: v for k, v in typevars.items() if isinstance(v, TypeVar)}
-            if not unbound_typevars:
-                return DictSpec(specs)
+            unbound_typevars = {k: v.typevar for k, v in specs.items() if isinstance(v, UnboundTypeVarSpec)}
+
+            if unbound_typevars:
+                return all_of(DictSpec(specs), UnboundTypeVarDictSpec(unbound_typevars, spec_from))
             else:
-                unbound_type_var_keys = {k: v.typevar for k, v in specs.items() if isinstance(v, UnboundTypeVarSpec)}
-                return all_of(DictSpec(specs), UnboundTypeVarDictSpec(unbound_type_var_keys, spec_from))
+                return DictSpec(specs)
         else:
             return is_instance(x)
 

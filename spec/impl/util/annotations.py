@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from spec.impl.util.typevars import extract_typevars
+from spec.impl.util.typevars import generic_class_typevars
 
 Hint = Any
 
@@ -22,7 +22,7 @@ class AnnotationContext:
 def extract_annotations(cls: type) -> Dict[str, AnnotationContext]:
     real_annotations = {}  # type: Dict[str,AnnotationContext]
 
-    typevars = extract_typevars(cls)
+    typevars = generic_class_typevars(cls)
 
     for klass in cls.mro():
         for attr, annotation in getattr(klass, "__annotations__", {}).items():

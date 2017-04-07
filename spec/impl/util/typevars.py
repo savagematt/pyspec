@@ -1,4 +1,4 @@
-def extract_typevars(cls: type):
+def generic_class_typevars(cls: type):
     typevars = {}
     for klass in cls.mro():
         for orig_base in getattr(klass, '__orig_bases__', []):

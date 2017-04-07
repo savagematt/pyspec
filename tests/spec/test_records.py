@@ -7,16 +7,16 @@ from spec.impl.core import SpecError
 from spec.impl.records import spec_from, Record
 
 
-class JustPrimitive(Record):
-    k: int
-
-
 def check_spec_error(s, value, expected_error_text):
     try:
         assert_spec(s, value)
         assert False, "Expected exception"
     except SpecError as e:
         assert expected_error_text in str(e)
+
+
+class JustPrimitive(Record):
+    k: int
 
 
 def test_primitives():
@@ -29,12 +29,12 @@ def test_primitives():
     check_spec_error(s, {'k': "not an int"}, "not an int")
 
 
-class HasGenericField(Record):
+class SingleGenericField(Record):
     k: List[int]
 
 
 def test_generics():
-    s = spec_from(HasGenericField)
+    s = spec_from(SingleGenericField)
 
     d = assert_spec(s, {'k': [123, 456]})
 
@@ -77,18 +77,12 @@ class ListsOfForwardReference(Record):
 def test_lists_of_forward_references():
     s = spec_from(ListsOfForwardReference)
 
-    d = assert_spec(s, {'k': [{'k': [{'k': []}, {'k': []}]}]})
+    d = assert_spec(s, {'k': [{'k': []}]})
 
-    assert d == {'k': [{'k': [{'k': []}, {'k': []}]}]}
+    assert d == {'k': [{'k': []}]}
 
     check_spec_error(s, {'k': ["not a NeedsForwardReference"]}, "not a NeedsForwardReference")
 
-
-A = TypeVar('A')
-B = TypeVar('B')
-C = TypeVar('C')
-D = TypeVar('D')
-E = TypeVar('E')
 
 T = TypeVar('T')
 V = TypeVar('V')
@@ -99,12 +93,12 @@ class GenericClass(Generic[T, V], Record):
     v: V
 
 
-class GenericClassImpl(GenericClass[int, str]):
+class BoundGenericClass(GenericClass[int, str]):
     pass
 
 
-def test_simpleish_generic_classes():
-    s = spec_from(GenericClassImpl)
+def test_generic_typevars_unconstrained_bound():
+    s = spec_from(BoundGenericClass)
 
     d = assert_spec(s, {'t': 123, 'v': 'string'})
 
@@ -113,47 +107,31 @@ def test_simpleish_generic_classes():
     check_spec_error(s, {'t': "not an int", 'v': 'string'}, "not an int")
 
 
-class MultipleGeneric(Generic[T, V], Record):
-    a: T
-    b: V
+class UnboundGenericClass(GenericClass[int, V]):
+    another_v: V
 
 
-class MultiImplA(MultipleGeneric[int, V]):
-    c: V
+def test_generic_typevars_unconstrained_unbound():
+    s = spec_from(UnboundGenericClass)
 
+    d = assert_spec(s, {'t': 123, 'v': "V type", 'another_v': "V type"})
 
-def test_generic_classes_with_unbound_typevars():
-    s = spec_from(MultiImplA)
+    assert d == {'t': 123, 'v': "V type", 'another_v': "V type"}
 
-    d = assert_spec(s, {'a': 123, 'b': "V type", 'c': "V type"})
-
-    assert d == {'a': 123, 'b': "V type", 'c': "V type"}
-
-    # Need to ensure all annotations marked with unbound generic V
-    # are of the same type
+    # Should not conform if all annotations marked with unbound generic V
+    # are not of the same type
     int_V = 123
     str_V = "mooooo"
-    check_spec_error(s, {'a': 123, 'b': int_V, 'c': str_V}, str_V)
+    check_spec_error(s, {'t': 123, 'v': int_V, 'another_v': str_V}, str_V)
 
 
-def test_generic_classes_with_just_in_time_bound_typevars():
-    s = spec_from(MultiImplA[int])
-
-    d = assert_spec(s, {'a': 123, 'b': 456, 'c': 789})
-
-    assert d == {'a': 123, 'b': 456, 'c': 789}
-
-    check_spec_error(s, {'a': 123, 'b': 456, 'c': "wrong type"}, "wrong type")
-
-
-class SomeOtherGeneric(Record):
+class NonGenericClassWithTypevars(Record):
     a: T
     b: T
 
 
-@pytest.mark.skip(reason="WIP")
-def test_unbound_typevars():
-    s = spec_from(SomeOtherGeneric)
+def test_non_generic_class_with_typevar_annotations():
+    s = spec_from(NonGenericClassWithTypevars)
 
     d = assert_spec(s, {'a': 123, 'b': 456})
 

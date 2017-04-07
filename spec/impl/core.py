@@ -109,6 +109,9 @@ class Spec(metaclass=ABCMeta):
     def __str__(self, *args, **kwargs):
         return self.describe()
 
+    def __repr__(self) -> str:
+        return self.describe()
+
 
 class DelegatingSpec(Spec):
     def __init__(self, delegate: Spec):
