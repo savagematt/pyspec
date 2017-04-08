@@ -1,9 +1,9 @@
-from typing import TypeVar, Union, List
+from typing import TypeVar, Union, List, _ForwardRef
 
 from spec.core import is_instance, all_of, one_of, coll_of
 from spec.impl.dicts import DictSpec
 from spec.impl.records.annotations import AnnotationContext, extract_annotations
-from spec.impl.records.forwardrefs import is_forward_ref, resolve_forward_ref, DeferredSpecFromForwardReference
+from spec.impl.records.forwardrefs import resolve_forward_ref, DeferredSpecFromForwardReference
 from spec.impl.records.typevars import UnboundTypeVar, UnboundTypeVarSpec, UnboundTypeVarDictSpec, _typevar_key
 
 
@@ -45,10 +45,10 @@ def spec_from(x: Union[AnnotationContext, type]):
 
     if isinstance(x, AnnotationContext):
         if type(x.annotation) == type(Union):
-            return one_of(*[spec_from(AnnotationContext(a, x.class_annotation_was_on, x.typevars_from_class)) for a in
-                            x.annotation.__args__])
+            return one_of(*[spec_from(AnnotationContext(a, x.class_annotation_was_on, x.typevars_from_class))
+                            for a in x.annotation.__args__])
 
-        elif is_forward_ref(x):
+        elif isinstance(x.annotation, _ForwardRef) or isinstance(x.annotation, str):
             return DeferredSpecFromForwardReference(spec_from, lambda: resolve_forward_ref(x))
 
         elif isinstance(x.annotation, TypeVar):
@@ -59,7 +59,7 @@ def spec_from(x: Union[AnnotationContext, type]):
                 AnnotationContext(x.annotation.__args__[0], x.class_annotation_was_on, x.typevars_from_class)))
 
         else:
-            return is_instance(x.annotation)
+            return spec_from(x.annotation)
 
     raise NotImplementedError("Can't produce a spec from {}".format(x))
 

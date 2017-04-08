@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, _ForwardRef
 
 from spec.impl.records.typevars import generic_class_typevars
 

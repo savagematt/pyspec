@@ -1,12 +1,9 @@
 import sys
-from typing import _ForwardRef, Callable, List
+from typing import _ForwardRef, Callable, List, Union
 
 from spec.impl.core import Spec, Path, Problem, SpecResult
 from spec.impl.records.annotations import AnnotationContext
 
-
-def is_forward_ref(ac: AnnotationContext):
-    return isinstance(ac.annotation, _ForwardRef) or isinstance(ac.annotation, str)
 
 def resolve_forward_ref(ac: AnnotationContext):
     typeref = ac.annotation
