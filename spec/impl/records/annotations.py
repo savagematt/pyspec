@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from spec.impl.util.typevars import generic_class_typevars
+from spec.impl.records.typevars import generic_class_typevars
 
 Hint = Any
 

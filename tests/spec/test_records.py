@@ -1,10 +1,8 @@
 from typing import List, Optional, TypeVar, Generic
 
-import pytest
-
 from spec.core import assert_spec
 from spec.impl.core import SpecError
-from spec.impl.records import spec_from, Record
+from spec.impl.records.core import spec_from, Record
 
 
 def check_spec_error(s, value, expected_error_text):
