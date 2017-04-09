@@ -18,6 +18,9 @@ class AnnotationContext:
         self.class_annotation_was_on = klass
         self.typevars_from_class = typevars
 
+    def for_hint(self, hint: Hint) -> 'AnnotationContext':
+        return AnnotationContext(hint, self.class_annotation_was_on, self.typevars_from_class)
+
 
 def extract_annotations(cls: type) -> Dict[str, AnnotationContext]:
     real_annotations = {}  # type: Dict[str,AnnotationContext]

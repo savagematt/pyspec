@@ -45,7 +45,7 @@ def spec_from(x: Union[AnnotationContext, type]):
 
     if isinstance(x, AnnotationContext):
         if type(x.annotation) == type(Union):
-            return one_of(*[spec_from(AnnotationContext(a, x.class_annotation_was_on, x.typevars_from_class))
+            return one_of(*[spec_from(x.for_hint(a))
                             for a in x.annotation.__args__])
 
         elif isinstance(x.annotation, _ForwardRef) or isinstance(x.annotation, str):
@@ -55,8 +55,7 @@ def spec_from(x: Union[AnnotationContext, type]):
             return spec_from(resolve_typevar(x))
 
         elif issubclass(x.annotation, List):
-            return coll_of(spec_from(
-                AnnotationContext(x.annotation.__args__[0], x.class_annotation_was_on, x.typevars_from_class)))
+            return coll_of(spec_from(x.for_hint(x.annotation.__args__[0])))
 
         else:
             return spec_from(x.annotation)
