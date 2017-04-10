@@ -1,6 +1,6 @@
-from typing import TypeVar, Union, List, _ForwardRef
+from typing import TypeVar, Union, List, _ForwardRef, Any
 
-from spec.core import is_instance, all_of, one_of, coll_of
+from spec.core import is_instance, all_of, one_of, coll_of, any_
 from spec.impl.dicts import DictSpec
 from spec.impl.records.annotations import AnnotationContext, extract_annotations
 from spec.impl.records.forwardrefs import resolve_forward_ref, DeferredSpecFromForwardReference
@@ -28,6 +28,7 @@ def spec_from(x: Union[AnnotationContext, type]):
         if issubclass(x, Record):
             annotations = extract_annotations(x)
             specs = {}
+
             for attr, annotation in annotations.items():
                 specs[attr] = spec_from(annotation)
 
@@ -47,6 +48,9 @@ def spec_from(x: Union[AnnotationContext, type]):
         if type(x.annotation) == type(Union):
             return one_of(*[spec_from(x.for_hint(a))
                             for a in x.annotation.__args__])
+
+        elif type(x.annotation) == type(Any):
+            return any_()
 
         elif isinstance(x.annotation, _ForwardRef) or isinstance(x.annotation, str):
             return DeferredSpecFromForwardReference(spec_from, lambda: resolve_forward_ref(x))
